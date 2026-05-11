@@ -6,6 +6,9 @@ let tasbihCount = 0;
 let tasbihTarget = 33;
 let currentPhrase = 'سبحان الله';
 let isDarkMode = localStorage.getItem('darkMode') === 'true';
+let quranDataLoaded = null;
+let currentAudioPlaylist = [];
+let currentPlayingIndex = -1;
 
 // Hadith Collection
 const hadiths = [
@@ -40,6 +43,7 @@ const hadiths = [
 document.addEventListener('DOMContentLoaded', () => {
     initializeTheme();
     initializeNavigation();
+    loadQuranData();
     loadSurahs();
     loadAudioSurahs();
     initializeAudioPlayer();
@@ -49,6 +53,17 @@ document.addEventListener('DOMContentLoaded', () => {
     loadBookmarks();
     initializeSearch();
 });
+
+// Load Quran Data from JSON
+async function loadQuranData() {
+    try {
+        const response = await fetch('data/quran-data.json');
+        quranDataLoaded = await response.json();
+    } catch (error) {
+        console.error('Error loading Quran data:', error);
+        quranDataLoaded = { surahs: {} };
+    }
+}
 
 // Theme Management
 function initializeTheme() {
@@ -125,41 +140,69 @@ function createSurahCard(surah) {
     return card;
 }
 
-function openSurah(surah) {
+async function openSurah(surah) {
     currentSurah = surah;
     document.getElementById('surahList').classList.add('hidden');
     const reader = document.getElementById('quranReader');
     reader.classList.remove('hidden');
     
     document.getElementById('surahTitle').textContent = `${surah.name} - ${surah.translation}`;
-    loadAyat(surah.number);
+    
+    // Show loading spinner
+    document.getElementById('loadingSpinner').classList.remove('hidden');
+    document.getElementById('ayatContainer').innerHTML = '';
+    document.getElementById('apiNotice').style.display = 'none';
+    
+    await loadAyat(surah.number);
 }
 
-function loadAyat(surahNumber) {
+async function loadAyat(surahNumber) {
     const container = document.getElementById('ayatContainer');
     container.innerHTML = '';
     
-    const ayat = sampleAyat[surahNumber] || generateSampleAyat(surahNumber);
-    
-    ayat.forEach(ayah => {
-        const ayahCard = createAyahCard(ayah, surahNumber);
-        container.appendChild(ayahCard);
-    });
-}
-
-function generateSampleAyat(surahNumber) {
-    const surah = quranData.surahs.find(s => s.number === surahNumber);
-    const ayat = [];
-    
-    for (let i = 1; i <= Math.min(5, surah.verses); i++) {
-        ayat.push({
-            number: i,
-            text: `بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ - آیه ${i} از سوره ${surah.name}`,
-            translation: `این متن نمونه ترجمه آیه ${i} از سوره ${surah.name} می‌باشد. برای دریافت متن کامل قرآن از API قرآن استفاده کنید.`
-        });
+    // Wait for data to load
+    if (!quranDataLoaded) {
+        await loadQuranData();
     }
     
-    return ayat;
+    // Get ayat from loaded data
+    const surahData = quranDataLoaded.surahs[surahNumber];
+    
+    if (surahData && surahData.ayahs) {
+        const ayahs = surahData.ayahs;
+        
+        ayahs.forEach(ayah => {
+            const ayahCard = createAyahCard(ayah, surahNumber);
+            container.appendChild(ayahCard);
+        });
+        
+        // Show API notice if surah has more than 20 verses
+        const totalVerses = quranData.surahs.find(s => s.number === surahNumber).verses;
+        if (totalVerses > 20) {
+            showApiNotice(surahNumber);
+        }
+    } else {
+        // Fallback: Show API message
+        showApiNotice(surahNumber);
+    }
+    
+    // Hide loading spinner
+    document.getElementById('loadingSpinner').classList.add('hidden');
+}
+
+function showApiNotice(surahNumber) {
+    const apiNotice = document.getElementById('apiNotice');
+    apiNotice.style.display = 'block';
+    
+    const apiUrl = `https://api.alquran.cloud/v1/surah/${surahNumber}/editions/quran-uthmani,fa.makarem`;
+    document.getElementById('apiUrl').textContent = apiUrl;
+}
+
+function copyApiUrl() {
+    const apiUrl = document.getElementById('apiUrl').textContent;
+    navigator.clipboard.writeText(apiUrl).then(() => {
+        alert('✅ لینک API کپی شد!');
+    });
 }
 
 function createAyahCard(ayah, surahNumber) {
@@ -175,7 +218,7 @@ function createAyahCard(ayah, surahNumber) {
                 <button class="btn-action ${isBookmarked ? 'bookmarked' : ''}" onclick="toggleBookmark(${surahNumber}, ${ayah.number})">
                     <i class="fas fa-bookmark"></i>
                 </button>
-                <button class="btn-action" onclick="copyAyah('${ayah.text}')">
+                <button class="btn-action" onclick="copyAyah(\`${ayah.text}\`)">
                     <i class="fas fa-copy"></i>
                 </button>
             </div>
@@ -239,175 +282,4 @@ function loadBookmarks() {
     container.innerHTML = '';
     
     if (bookmarks.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-bookmark"></i>
-                <p>هنوز هیچ نشانکی اضافه نکرده‌اید</p>
-            </div>
-        `;
-        return;
-    }
-    
-    bookmarks.forEach((bookmark, index) => {
-        const item = document.createElement('div');
-        item.className = 'bookmark-item';
-        item.innerHTML = `
-            <div class="bookmark-info">
-                <h4>${bookmark.surahName} - آیه ${bookmark.ayah}</h4>
-                <p>${new Date(bookmark.timestamp).toLocaleDateString('fa-IR')}</p>
-            </div>
-            <button class="btn-delete" onclick="deleteBookmark(${index})">
-                <i class="fas fa-trash"></i>
-            </button>
-        `;
-        container.appendChild(item);
-    });
-}
-
-function deleteBookmark(index) {
-    bookmarks.splice(index, 1);
-    localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
-    loadBookmarks();
-}
-
-document.getElementById('clearBookmarks').addEventListener('click', () => {
-    if (confirm('آیا مطمئن هستید که می‌خواهید تمام نشانک‌ها را پاک کنید؟')) {
-        bookmarks = [];
-        localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
-        loadBookmarks();
-    }
-});
-
-function copyAyah(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        alert('آیه کپی شد');
-    });
-}
-
-// Audio Player
-function loadAudioSurahs() {
-    const select = document.getElementById('audioSurahSelect');
-    quranData.surahs.forEach(surah => {
-        const option = document.createElement('option');
-        option.value = surah.number;
-        option.textContent = `${surah.number}. ${surah.name} - ${surah.translation}`;
-        select.appendChild(option);
-    });
-}
-
-function initializeAudioPlayer() {
-    const reciterSelect = document.getElementById('reciterSelect');
-    const surahSelect = document.getElementById('audioSurahSelect');
-    
-    reciterSelect.addEventListener('change', updateAudio);
-    surahSelect.addEventListener('change', updateAudio);
-}
-
-function updateAudio() {
-    const reciter = document.getElementById('reciterSelect').value;
-    const surah = document.getElementById('audioSurahSelect').value;
-    const surahData = quranData.surahs.find(s => s.number == surah);
-    
-    // Sample audio URL (You should use actual Quran API)
-    const audioUrl = `https://server8.mp3quran.net/${reciter}/${String(surah).padStart(3, '0')}.mp3`;
-    
-    document.getElementById('audioSource').src = audioUrl;
-    document.getElementById('audioPlayer').load();
-    
-    document.getElementById('nowPlaying').innerHTML = `
-        <i class="fas fa-music"></i>
-        <span>در حال پخش: ${surahData.name} - ${surahData.translation}</span>
-    `;
-}
-
-// Hadith
-function loadRandomHadith() {
-    const randomIndex = Math.floor(Math.random() * hadiths.length);
-    const hadith = hadiths[randomIndex];
-    
-    document.querySelector('.hadith-content').textContent = hadith.text;
-    document.querySelector('.hadith-source').textContent = `📖 ${hadith.source}`;
-    
-    // Add translation after Arabic text
-    const content = document.querySelector('.hadith-content');
-    content.innerHTML = `
-        ${hadith.text}
-        <br><br>
-        <em style="font-size: 1.1rem;">${hadith.translation}</em>
-    `;
-}
-
-document.getElementById('refreshHadith').addEventListener('click', loadRandomHadith);
-
-// Prayer Times
-function initializePrayerTimes() {
-    const citySelect = document.getElementById('citySelect');
-    citySelect.addEventListener('change', updatePrayerTimes);
-    updatePrayerTimes();
-}
-
-function updatePrayerTimes() {
-    const city = document.getElementById('citySelect').value;
-    const times = prayerTimesData[city];
-    
-    document.getElementById('fajr').textContent = times.fajr;
-    document.getElementById('sunrise').textContent = times.sunrise;
-    document.getElementById('dhuhr').textContent = times.dhuhr;
-    document.getElementById('sunset').textContent = times.sunset;
-    document.getElementById('maghrib').textContent = times.maghrib;
-    document.getElementById('midnight').textContent = times.midnight;
-}
-
-// Tasbih
-function initializeTasbih() {
-    document.getElementById('tasbihBtn').addEventListener('click', incrementTasbih);
-    document.getElementById('resetTasbih').addEventListener('click', resetTasbih);
-    document.getElementById('targetSelect').addEventListener('change', updateTarget);
-    
-    document.querySelectorAll('.phrase-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.phrase-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            currentPhrase = btn.dataset.phrase;
-            document.getElementById('currentPhrase').textContent = currentPhrase;
-            resetTasbih();
-        });
-    });
-}
-
-function incrementTasbih() {
-    if (tasbihCount < tasbihTarget) {
-        tasbihCount++;
-        document.getElementById('tasbihCount').textContent = tasbihCount;
-        
-        // Vibrate if supported
-        if (navigator.vibrate) {
-            navigator.vibrate(50);
-        }
-        
-        // Visual feedback
-        const btn = document.getElementById('tasbihBtn');
-        btn.style.transform = 'scale(0.95)';
-        setTimeout(() => {
-            btn.style.transform = 'scale(1)';
-        }, 100);
-        
-        // Alert when target reached
-        if (tasbihCount === tasbihTarget) {
-            setTimeout(() => {
-                alert(`✅ به ${tasbihTarget} بار ${currentPhrase} رسیدید! الحمدلله`);
-            }, 200);
-        }
-    }
-}
-
-function resetTasbih() {
-    tasbihCount = 0;
-    document.getElementById('tasbihCount').textContent = tasbihCount;
-}
-
-function updateTarget() {
-    tasbihTarget = parseInt(document.getElementById('targetSelect').value);
-    document.getElementById('tasbihTarget').textContent = tasbihTarget;
-    resetTasbih();
-}
+        container.innerHTML = 
