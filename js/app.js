@@ -687,49 +687,172 @@ function initializeAudioPlayer() {
     }
 }
 
-function updateAudio() {
-    const reciter = document.getElementById('reciterSelect')?.value;
-    const surahNumber = document.getElementById('audioSurahSelect')?.value;
+// جایگزینی کامل تابع updateAudio
+async function updateAudio() {
+    const reciterSelect = document.getElementById('reciterSelect');
+    const surahSelect = document.getElementById('audioSurahSelect');
+    
+    if (!reciterSelect || !surahSelect) return;
+    
+    const reciter = reciterSelect.value;
+    const surahNumber = parseInt(surahSelect.value);
     
     if (!reciter || !surahNumber) {
+        showToast('⚠️ لطفا قاری و سوره را انتخاب کنید');
         return;
     }
     
-    const surah = quranData.surahs.find(s => s.number == surahNumber);
+    const surah = quranData.surahs.find(s => s.number === surahNumber);
     if (!surah) return;
     
-    // API endpoints for different reciters
-    const reciterAPIs = {
+    // نمایش لودینگ
+    const nowPlaying = document.getElementById('nowPlaying');
+    if (nowPlaying) {
+        nowPlaying.innerHTML = `
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>در حال بارگذاری...</span>
+        `;
+    }
+    
+    // لیست URLهای ممکن
+    const possibleURLs = [
+        // منبع اصلی
+        `https://server8.mp3quran.net/${getReciterCode(reciter)}/${String(surahNumber).padStart(3, '0')}.mp3`,
+        
+        // منبع جایگزین 1
+        `https://cdn.islamic.network/quran/audio/128/${getAPIReciterCode(reciter)}/${String(surahNumber).padStart(3, '0')}.mp3`,
+        
+        // منبع جایگزین 2 (پیش‌فرض: العفاسی)
+        `https://server8.mp3quran.net/afs/${String(surahNumber).padStart(3, '0')}.mp3`
+    ];
+    
+    // امتحان کردن URLها
+    let audioLoaded = false;
+    
+    for (let i = 0; i < possibleURLs.length; i++) {
+        const url = possibleURLs[i];
+        console.log(`🎧 Trying URL ${i + 1}:`, url);
+        
+        const success = await loadAudioSource(url, surah, reciter, i === possibleURLs.length - 1);
+        
+        if (success) {
+            audioLoaded = true;
+            break;
+        }
+    }
+    
+    if (!audioLoaded) {
+        showToast('❌ متاسفانه صوت این سوره در دسترس نیست');
+        if (nowPlaying) {
+            nowPlaying.innerHTML = `
+                <i class="fas fa-exclamation-circle"></i>
+                <span>خطا در بارگذاری صوت</span>
+            `;
+        }
+    }
+}
+
+// تابع بارگذاری منبع صوتی
+function loadAudioSource(url, surah, reciter, isLastAttempt) {
+    return new Promise((resolve) => {
+        const audioSource = document.getElementById('audioSource');
+        const audioPlayer = document.getElementById('audioPlayer');
+        
+        if (!audioSource || !audioPlayer) {
+            resolve(false);
+            return;
+        }
+        
+        // متوقف کردن پخش قبلی
+        audioPlayer.pause();
+        
+        // تنظیم منبع جدید
+        audioSource.src = url;
+        audioPlayer.load();
+        
+        // تایمر timeout
+        const timeout = setTimeout(() => {
+            console.log('⏱️ Timeout for:', url);
+            resolve(false);
+        }, 5000); // 5 ثانیه timeout
+        
+        // رویداد موفقیت
+        const onSuccess = () => {
+            clearTimeout(timeout);
+            console.log('✅ Audio loaded:', url);
+            
+            const nowPlaying = document.getElementById('nowPlaying');
+            if (nowPlaying) {
+                nowPlaying.innerHTML = `
+                    <i class="fas fa-music"></i>
+                    <span>آماده پخش: ${surah.name} - ${surah.translation} | قاری: ${getReciterName(reciter)}</span>
+                `;
+            }
+            
+            showToast(`🎧 ${surah.name} آماده پخش است`);
+            audioPlayer.removeEventListener('loadeddata', onSuccess);
+            audioPlayer.removeEventListener('error', onError);
+            resolve(true);
+        };
+        
+        // رویداد خطا
+        const onError = () => {
+            clearTimeout(timeout);
+            console.log('❌ Audio error:', url);
+            audioPlayer.removeEventListener('loadeddata', onSuccess);
+            audioPlayer.removeEventListener('error', onError);
+            resolve(false);
+        };
+        
+        audioPlayer.addEventListener('loadeddata', onSuccess, { once: true });
+        audioPlayer.addEventListener('error', onError, { once: true });
+    });
+}
+
+// کدهای قاریان برای سرورهای مختلف
+function getReciterCode(reciter) {
+    const codes = {
+        'abdulbasit': 'bst',
+        'minshawi': 'mns',
+        'husary': 'hsr',
+        'afasy': 'afs',
+        'sudais': 'sds',
+        'ghamadi': 's_gmd',
+        'shuraim': 'shr',
+        'ajmi': 'ajm',
+        'tablawi': 'tbl'
+    };
+    return codes[reciter] || 'afs';
+}
+
+function getAPIReciterCode(reciter) {
+    const codes = {
         'abdulbasit': 'ar.abdulbasitmurattal',
         'minshawi': 'ar.minshawi',
         'husary': 'ar.husary',
         'afasy': 'ar.alafasy',
-        'sudais': 'ar.abdurrahmaansudais'
+        'sudais': 'ar.abdurrahmaansudais',
+        'ghamadi': 'ar.saadalghamadi',
+        'shuraim': 'ar.shaatree',
+        'ajmi': 'ar.ahmedajamy',
+        'tablawi': 'ar.tablaway'
     };
-    
-    const reciterCode = reciterAPIs[reciter] || 'ar.alafasy';
-    const paddedNumber = String(surahNumber).padStart(3, '0');
-    
-    // Using Al-Quran Cloud API
-    const audioUrl = `https://cdn.islamic.network/quran/audio/128/${reciterCode}/${paddedNumber}.mp3`;
-    
-    const audioSource = document.getElementById('audioSource');
-    const audioPlayer = document.getElementById('audioPlayer');
-    
-    if (audioSource && audioPlayer) {
-        audioSource.src = audioUrl;
-        audioPlayer.load();
-        
-        const nowPlaying = document.getElementById('nowPlaying');
-        if (nowPlaying) {
-            nowPlaying.innerHTML = `
-                <i class="fas fa-music"></i>
-                <span>آماده پخش: ${surah.name} - ${surah.translation}</span>
-            `;
-        }
-        
-        showToast(`🎧 ${surah.name} آماده پخش است`);
-    }
+    return codes[reciter] || 'ar.alafasy';
+}
+
+function getReciterName(reciter) {
+    const names = {
+        'abdulbasit': 'عبدالباسط عبدالصمد',
+        'minshawi': 'محمد صدیق المنشاوی',
+        'husary': 'محمود خلیل الحصری',
+        'afasy': 'مشاری راشد العفاسی',
+        'sudais': 'عبدالرحمن السدیس',
+        'ghamadi': 'سعد الغامدی',
+        'shuraim': 'سعود الشریم',
+        'ajmi': 'احمد العجمی',
+        'tablawi': 'محمد محمود الطبلاوی'
+    };
+    return names[reciter] || 'مشاری راشد العفاسی';
 }
 
 // Hadith Functions
