@@ -258,13 +258,30 @@ function generateSampleAyat(surahNumber) {
     if (!surah) return [];
     
     const ayat = [];
-    const maxAyat = Math.min(10, surah.verses); // Show max 10 sample verses
+    const maxAyat = Math.min(10, surah.verses);
+    
+    // نمونه متن‌های عربی متنوع برای هر سوره
+    const arabicSamples = [
+        "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
+        "الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ",
+        "إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ",
+        "اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ",
+        "قُلْ هُوَ اللَّهُ أَحَدٌ",
+        "اللَّهُ الصَّمَدُ",
+        "إِنَّا أَعْطَيْنَاكَ الْكَوْثَرَ",
+        "فَصَلِّ لِرَبِّكَ وَانْحَرْ",
+        "وَالْعَصْرِ إِنَّ الْإِنسَانَ لَفِي خُسْرٍ",
+        "قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ"
+    ];
     
     for (let i = 1; i <= maxAyat; i++) {
+        // استفاده از شماره سوره برای ایجاد تنوع
+        const sampleIndex = (surahNumber + i - 1) % arabicSamples.length;
+        
         ayat.push({
             number: i,
-            text: generateArabicSample(i),
-            translation: `این متن نمونه ترجمه آیه ${i} از سوره ${surah.name} می‌باشد. برای دریافت متن کامل قرآن از API قرآن کریم استفاده کنید. این پروژه به صورت نمونه طراحی شده است.`
+            text: `${arabicSamples[sampleIndex]} ﴿${i}﴾`,
+            translation: `این متن نمونه ترجمه آیه ${i} از سوره ${surah.name} (${surah.translation}) می‌باشد. این سوره ${surah.type} است و ${surah.verses} آیه دارد. برای مشاهده متن کامل و دقیق قرآن کریم، از API قرآن استفاده کنید.`
         });
     }
     
