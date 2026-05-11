@@ -234,23 +234,58 @@ function openSurah(surah) {
     }
 }
 
-function loadAyat(surahNumber) {
+// جایگزین تابع loadAyat در app.js
+async function loadAyat(surahNumber) {
     const container = document.getElementById('ayatContainer');
     if (!container) return;
     
-    container.innerHTML = '<div class="loading">در حال بارگذاری...</div>';
+    container.innerHTML = '<div class="loading">در حال بارگذاری آیات...</div>';
     
-    // Simulate loading delay
-    setTimeout(() => {
-        container.innerHTML = '';
+    try {
+        // استفاده از API واقعی قرآن
+        const response = await fetch(`https://api.alquran.cloud/v1/surah/${surahNumber}/editions/quran-uthmani,fa.fooladvand`);
+        const data = await response.json();
         
+        if (data.code === 200 && data.data && data.data.length >= 2) {
+            container.innerHTML = '';
+            
+            const arabicSurah = data.data[0];
+            const persianSurah = data.data[1];
+            
+            // نمایش آیات
+            for (let i = 0; i < arabicSurah.ayahs.length; i++) {
+                const arabicAyah = arabicSurah.ayahs[i];
+                const persianAyah = persianSurah.ayahs[i];
+                
+                const ayahData = {
+                    number: arabicAyah.numberInSurah,
+                    text: arabicAyah.text,
+                    translation: persianAyah.text
+                };
+                
+                const ayahCard = createAyahCard(ayahData, surahNumber);
+                container.appendChild(ayahCard);
+            }
+            
+            showToast(`✅ ${arabicSurah.ayahs.length} آیه بارگذاری شد`);
+        } else {
+            throw new Error('خطا در دریافت داده');
+        }
+        
+    } catch (error) {
+        console.error('Error loading ayat:', error);
+        
+        // در صورت خطا، از داده‌های نمونه استفاده کن
+        container.innerHTML = '';
         const ayat = sampleAyat[surahNumber] || generateSampleAyat(surahNumber);
         
         ayat.forEach(ayah => {
             const ayahCard = createAyahCard(ayah, surahNumber);
             container.appendChild(ayahCard);
         });
-    }, 500);
+        
+        showToast('⚠️ از داده‌های نمونه استفاده شد');
+    }
 }
 
 function generateSampleAyat(surahNumber) {
