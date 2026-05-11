@@ -24,6 +24,10 @@
                     <i class="fas fa-headphones"></i>
                     <span>تلاوت</span>
                 </button>
+                <button class="nav-btn" data-section="khatam">
+                    <i class="fas fa-check-circle"></i>
+                    <span>ختم قرآن</span>
+                </button>
                 <button class="nav-btn" data-section="hadith">
                     <i class="fas fa-quote-right"></i>
                     <span>حدیث</span>
@@ -72,13 +76,31 @@
                         </button>
                         <h3 id="surahTitle"></h3>
                     </div>
+                    
+                    <div class="loading-spinner hidden" id="loadingSpinner">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>در حال بارگذاری...</p>
+                    </div>
+                    
                     <div class="ayat-container" id="ayatContainer">
                         <!-- Ayat will be loaded here -->
+                    </div>
+                    
+                    <div class="api-notice" id="apiNotice">
+                        <div class="notice-card">
+                            <i class="fas fa-info-circle"></i>
+                            <h4>برای مشاهده آیات بیشتر</h4>
+                            <p>برای دسترسی به تمام آیات این سوره، می‌توانید از API زیر استفاده کنید:</p>
+                            <code id="apiUrl"></code>
+                            <button class="btn-copy-api" onclick="copyApiUrl()">
+                                <i class="fas fa-copy"></i> کپی لینک API
+                            </button>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Audio Section -->
+            <!-- Audio Section (Updated) -->
             <section id="audio" class="section">
                 <div class="section-header">
                     <h2><i class="fas fa-headphones"></i> صدای تلاوت</h2>
@@ -88,11 +110,11 @@
                     <div class="reciter-select">
                         <label>انتخاب قاری:</label>
                         <select id="reciterSelect">
-                            <option value="abdulbasit">عبدالباسط عبدالصمد</option>
-                            <option value="minshawi">محمد صدیق المنشاوی</option>
-                            <option value="husary">محمود خلیل الحصری</option>
-                            <option value="afasy">مشاری راشد العفاسی</option>
-                            <option value="sudais">عبدالرحمن السدیس</option>
+                            <option value="ar.alafasy">مشاری راشد العفاسی</option>
+                            <option value="ar.abdulbasitmurattal">عبدالباسط عبدالصمد (مرتل)</option>
+                            <option value="ar.minshawi">محمد صدیق المنشاوی</option>
+                            <option value="ar.husary">محمود خلیل الحصری</option>
+                            <option value="ar.abdurrahmaansudais">عبدالرحمن السدیس</option>
                         </select>
                     </div>
                     
@@ -101,6 +123,22 @@
                         <select id="audioSurahSelect">
                             <!-- Surahs will be loaded here -->
                         </select>
+                    </div>
+                    
+                    <div class="ayah-range">
+                        <label>محدوده آیات (1-20):</label>
+                        <div class="range-inputs">
+                            <input type="number" id="startAyah" min="1" max="20" value="1" placeholder="از آیه">
+                            <span>تا</span>
+                            <input type="number" id="endAyah" min="1" max="20" value="20" placeholder="تا آیه">
+                            <button class="btn-load-audio" id="loadAudioBtn">
+                                <i class="fas fa-play"></i> بارگذاری
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="audio-playlist" id="audioPlaylist">
+                        <!-- Audio playlist will be loaded here -->
                     </div>
                     
                     <div class="player-controls">
@@ -112,7 +150,56 @@
                     
                     <div class="now-playing" id="nowPlaying">
                         <i class="fas fa-music"></i>
-                        <span>در حال پخش: هیچ</span>
+                        <span>آماده پخش...</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Khatam Quran Section (NEW) -->
+            <section id="khatam" class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-check-circle"></i> ختم قرآن کریم</h2>
+                    <button class="btn-refresh" id="resetKhatam">
+                        <i class="fas fa-redo"></i> شروع ختم جدید
+                    </button>
+                </div>
+                
+                <div class="khatam-container">
+                    <div class="khatam-stats">
+                        <div class="stat-card">
+                            <i class="fas fa-book"></i>
+                            <h3>پیشرفت ختم</h3>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="khatamProgress"></div>
+                            </div>
+                            <p class="progress-text" id="progressText">0%</p>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <i class="fas fa-check-double"></i>
+                            <h3>اجزاء خوانده شده</h3>
+                            <p class="stat-number" id="completedJuz">0 / 30</p>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <i class="fas fa-calendar"></i>
+                            <h3>روزهای متوالی</h3>
+                            <p class="stat-number" id="streakDays">0 روز</p>
+                        </div>
+                    </div>
+                    
+                    <div class="juz-grid" id="juzGrid">
+                        <!-- Juz cards will be loaded here -->
+                    </div>
+                    
+                    <div class="khatam-history">
+                        <h3><i class="fas fa-history"></i> تاریخچه ختم‌ها</h3>
+                        <div class="history-list" id="khatamHistory">
+                            <div class="empty-state">
+                                <i class="fas fa-book-reader"></i>
+                                <p>هنوز ختمی تکمیل نشده است</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -259,6 +346,7 @@
 
     <script src="js/quran.js"></script>
     <script src="js/praytime.js"></script>
+    <script src="js/khatam.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
