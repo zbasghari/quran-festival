@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جشنواره قرآنی - پلتفرم جامع قرآن کریم</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-book-quran"></i>
+                <h1>جشنواره قرآنی</h1>
+            </div>
+            <nav class="nav">
+                <button class="nav-btn active" data-section="quran">
+                    <i class="fas fa-book-open"></i>
+                    <span>قرآن</span>
+                </button>
+                <button class="nav-btn" data-section="audio">
+                    <i class="fas fa-headphones"></i>
+                    <span>تلاوت</span>
+                </button>
+                <button class="nav-btn" data-section="hadith">
+                    <i class="fas fa-quote-right"></i>
+                    <span>حدیث</span>
+                </button>
+                <button class="nav-btn" data-section="prayer">
+                    <i class="fas fa-clock"></i>
+                    <span>اوقات شرعی</span>
+                </button>
+                <button class="nav-btn" data-section="tasbih">
+                    <i class="fas fa-hand-sparkles"></i>
+                    <span>تسبیح</span>
+                </button>
+                <button class="nav-btn" data-section="bookmarks">
+                    <i class="fas fa-bookmark"></i>
+                    <span>نشانک‌ها</span>
+                </button>
+            </nav>
+            <button class="theme-toggle" id="themeToggle">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            
+            <!-- Quran Section -->
+            <section id="quran" class="section active">
+                <div class="section-header">
+                    <h2><i class="fas fa-book-open"></i> قرآن کریم</h2>
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="جستجو در قرآن...">
+                    </div>
+                </div>
+                
+                <div class="surah-list" id="surahList">
+                    <!-- Surahs will be loaded here -->
+                </div>
+                
+                <div class="quran-reader hidden" id="quranReader">
+                    <div class="reader-header">
+                        <button class="btn-back" id="btnBack">
+                            <i class="fas fa-arrow-right"></i> بازگشت
+                        </button>
+                        <h3 id="surahTitle"></h3>
+                    </div>
+                    <div class="ayat-container" id="ayatContainer">
+                        <!-- Ayat will be loaded here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Audio Section -->
+            <section id="audio" class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-headphones"></i> صدای تلاوت</h2>
+                </div>
+                
+                <div class="audio-player">
+                    <div class="reciter-select">
+                        <label>انتخاب قاری:</label>
+                        <select id="reciterSelect">
+                            <option value="abdulbasit">عبدالباسط عبدالصمد</option>
+                            <option value="minshawi">محمد صدیق المنشاوی</option>
+                            <option value="husary">محمود خلیل الحصری</option>
+                            <option value="afasy">مشاری راشد العفاسی</option>
+                            <option value="sudais">عبدالرحمن السدیس</option>
+                        </select>
+                    </div>
+                    
+                    <div class="surah-select">
+                        <label>انتخاب سوره:</label>
+                        <select id="audioSurahSelect">
+                            <!-- Surahs will be loaded here -->
+                        </select>
+                    </div>
+                    
+                    <div class="player-controls">
+                        <audio id="audioPlayer" controls>
+                            <source id="audioSource" type="audio/mpeg">
+                            مرورگر شما از پخش صوت پشتیبانی نمی‌کند.
+                        </audio>
+                    </div>
+                    
+                    <div class="now-playing" id="nowPlaying">
+                        <i class="fas fa-music"></i>
+                        <span>در حال پخش: هیچ</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Hadith Section -->
+            <section id="hadith" class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-quote-right"></i> حدیث روز</h2>
+                    <button class="btn-refresh" id="refreshHadith">
+                        <i class="fas fa-sync-alt"></i> حدیث جدید
+                    </button>
+                </div>
+                
+                <div class="hadith-card">
+                    <div class="hadith-text" id="hadithText">
+                        <p class="hadith-content"></p>
+                        <p class="hadith-source"></p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Prayer Times Section -->
+            <section id="prayer" class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-clock"></i> اوقات شرعی</h2>
+                </div>
+                
+                <div class="location-select">
+                    <label>انتخاب شهر:</label>
+                    <select id="citySelect">
+                        <option value="tehran">تهران</option>
+                        <option value="mashhad">مشهد</option>
+                        <option value="isfahan">اصفهان</option>
+                        <option value="shiraz">شیراز</option>
+                        <option value="tabriz">تبریز</option>
+                        <option value="qom">قم</option>
+                    </select>
+                </div>
+                
+                <div class="prayer-times" id="prayerTimes">
+                    <div class="prayer-card">
+                        <i class="fas fa-sun"></i>
+                        <h3>اذان صبح</h3>
+                        <p class="time" id="fajr">--:--</p>
+                    </div>
+                    <div class="prayer-card">
+                        <i class="fas fa-sunrise"></i>
+                        <h3>طلوع آفتاب</h3>
+                        <p class="time" id="sunrise">--:--</p>
+                    </div>
+                    <div class="prayer-card">
+                        <i class="fas fa-sun"></i>
+                        <h3>اذان ظهر</h3>
+                        <p class="time" id="dhuhr">--:--</p>
+                    </div>
+                    <div class="prayer-card">
+                        <i class="fas fa-cloud-sun"></i>
+                        <h3>غروب آفتاب</h3>
+                        <p class="time" id="sunset">--:--</p>
+                    </div>
+                    <div class="prayer-card">
+                        <i class="fas fa-moon"></i>
+                        <h3>اذان مغرب</h3>
+                        <p class="time" id="maghrib">--:--</p>
+                    </div>
+                    <div class="prayer-card">
+                        <i class="fas fa-star"></i>
+                        <h3>نیمه شب</h3>
+                        <p class="time" id="midnight">--:--</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tasbih Section -->
+            <section id="tasbih" class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-hand-sparkles"></i> تسبیح دیجیتال</h2>
+                </div>
+                
+                <div class="tasbih-container">
+                    <div class="tasbih-display">
+                        <div class="count-display" id="tasbihCount">0</div>
+                        <div class="target-display">از <span id="tasbihTarget">33</span></div>
+                    </div>
+                    
+                    <button class="tasbih-button" id="tasbihBtn">
+                        <i class="fas fa-hand-point-up"></i>
+                    </button>
+                    
+                    <div class="tasbih-controls">
+                        <button class="btn-reset" id="resetTasbih">
+                            <i class="fas fa-redo"></i> شروع مجدد
+                        </button>
+                        <select id="targetSelect">
+                            <option value="33">33 بار</option>
+                            <option value="99">99 بار</option>
+                            <option value="100">100 بار</option>
+                            <option value="1000">1000 بار</option>
+                        </select>
+                    </div>
+                    
+                    <div class="tasbih-phrases">
+                        <button class="phrase-btn active" data-phrase="سبحان الله">سبحان الله</button>
+                        <button class="phrase-btn" data-phrase="الحمدلله">الحمدلله</button>
+                        <button class="phrase-btn" data-phrase="الله اکبر">الله اکبر</button>
+                        <button class="phrase-btn" data-phrase="لا اله الا الله">لا اله الا الله</button>
+                    </div>
+                    
+                    <div class="current-phrase" id="currentPhrase">سبحان الله</div>
+                </div>
+            </section>
+
+            <!-- Bookmarks Section -->
+            <section id="bookmarks" class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-bookmark"></i> نشانک‌های من</h2>
+                    <button class="btn-clear" id="clearBookmarks">
+                        <i class="fas fa-trash"></i> پاک کردن همه
+                    </button>
+                </div>
+                
+                <div class="bookmarks-list" id="bookmarksList">
+                    <div class="empty-state">
+                        <i class="fas fa-bookmark"></i>
+                        <p>هنوز هیچ نشانکی اضافه نکرده‌اید</p>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>© 2024 جشنواره قرآنی | تمامی حقوق محفوظ است</p>
+            <div class="social-links">
+                <a href="#"><i class="fab fa-telegram"></i></a>
+                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/quran.js"></script>
+    <script src="js/praytime.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
