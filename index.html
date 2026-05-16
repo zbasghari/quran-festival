@@ -101,59 +101,105 @@
             </section>
 
             <!-- Audio Section (Updated) -->
-            <section id="audio" class="section">
-                <div class="section-header">
-                    <h2><i class="fas fa-headphones"></i> صدای تلاوت</h2>
+        <!-- Audio Section -->
+<section id="audio" class="section">
+    <div class="section-header">
+        <h2><i class="fas fa-headphones"></i> صدای تلاوت قرآن کریم</h2>
+    </div>
+        <div class="audio-player-modern">
+                <!-- انتخاب قاری -->
+        <div class="reciter-selection">
+            <h3><i class="fas fa-user"></i> انتخاب قاری</h3>
+            <div class="reciter-cards">
+                <div class="reciter-card active" data-reciter="alafasy" onclick="selectReciter('alafasy')">
+                    <div class="reciter-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <h4>مشاری راشد العفاسی</h4>
+                    <p>کویت 🇰🇼</p>
+                    <span class="reciter-badge">توصیه شده</span>
                 </div>
                 
-                <div class="audio-player">
-                    <div class="reciter-select">
-                        <label>انتخاب قاری:</label>
-                        <select id="reciterSelect">
-                            <option value="ar.alafasy">مشاری راشد العفاسی</option>
-                            <option value="ar.abdulbasitmurattal">عبدالباسط عبدالصمد (مرتل)</option>
-                            <option value="ar.minshawi">محمد صدیق المنشاوی</option>
-                            <option value="ar.husary">محمود خلیل الحصری</option>
-                            <option value="ar.abdurrahmaansudais">عبدالرحمن السدیس</option>
-                        </select>
+                <div class="reciter-card" data-reciter="abdulbasit" onclick="selectReciter('abdulbasit')">
+                    <div class="reciter-avatar">
+                        <i class="fas fa-user-circle"></i>
                     </div>
-                    
-                    <div class="surah-select">
-                        <label>انتخاب سوره:</label>
-                        <select id="audioSurahSelect">
-                            <!-- Surahs will be loaded here -->
-                        </select>
-                    </div>
-                    
-                    <div class="ayah-range">
-                        <label>محدوده آیات (1-20):</label>
-                        <div class="range-inputs">
-                            <input type="number" id="startAyah" min="1" max="20" value="1" placeholder="از آیه">
-                            <span>تا</span>
-                            <input type="number" id="endAyah" min="1" max="20" value="20" placeholder="تا آیه">
-                            <button class="btn-load-audio" id="loadAudioBtn">
-                                <i class="fas fa-play"></i> بارگذاری
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="audio-playlist" id="audioPlaylist">
-                        <!-- Audio playlist will be loaded here -->
-                    </div>
-                    
-                    <div class="player-controls">
-                        <audio id="audioPlayer" controls>
-                            <source id="audioSource" type="audio/mpeg">
-                            مرورگر شما از پخش صوت پشتیبانی نمی‌کند.
-                        </audio>
-                    </div>
-                    
-                    <div class="now-playing" id="nowPlaying">
-                        <i class="fas fa-music"></i>
-                        <span>آماده پخش...</span>
-                    </div>
+                    <h4>عبدالباسط عبدالصمد</h4>
+                    <p>مصر 🇪🇬</p>
+                    <span class="reciter-badge">کلاسیک</span>
                 </div>
-            </section>
+            </div>
+        </div>
+                <!-- انتخاب سوره -->
+        <div class="surah-selection">
+            <label><i class="fas fa-book-quran"></i> انتخاب سوره:</label>
+            <select id="audioSurahSelect" class="modern-select">
+                <option value="">یک سوره انتخاب کنید...</option>
+            </select>
+        </div>
+        
+        <!-- پلیر صوتی -->
+        <div class="audio-player-box">
+            <div class="now-playing-header">
+                <i class="fas fa-music"></i>
+                <span id="currentSurahName">هیچ سوره‌ای انتخاب نشده</span>
+            </div>
+            
+            <div class="audio-wave">
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+            </div>
+            
+            <!-- Player اصلی -->
+            <audio id="audioPlayer" controls controlsList="nodownload">
+                <source id="audioSource" type="audio/mpeg">
+                مرورگر شما از پخش صوت پشتیبانی نمی‌کند.
+            </audio>
+            
+            <div class="player-info">
+                <div class="reciter-info">
+                    <i class="fas fa-microphone"></i>
+                    <span id="currentReciterName">مشاری راشد العفاسی</span>
+                </div>
+                <div class="playback-speed">
+                    <label>سرعت پخش:</label>
+                    <select id="playbackSpeed">
+                        <option value="0.75">0.75x</option>
+                        <option value="1" selected>عادی</option>
+                        <option value="1.25">1.25x</option>
+                        <option value="1.5">1.5x</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <!-- لیست سوره‌های محبوب -->
+        <div class="popular-surahs">
+            <h3><i class="fas fa-star"></i> سوره‌های پرطرفدار</h3>
+            <div class="popular-surah-list">
+                <button class="popular-surah-btn" onclick="quickPlaySurah(1)">
+                    <i class="fas fa-play-circle"></i> الفاتحه
+                </button>
+                <button class="popular-surah-btn" onclick="quickPlaySurah(36)">
+                    <i class="fas fa-play-circle"></i> یس
+                </button>
+                <button class="popular-surah-btn" onclick="quickPlaySurah(55)">
+                    <i class="fas fa-play-circle"></i> الرحمن
+                </button>
+                <button class="popular-surah-btn" onclick="quickPlaySurah(67)">
+                    <i class="fas fa-play-circle"></i> الملک
+                </button>
+                <button class="popular-surah-btn" onclick="quickPlaySurah(112)">
+                    <i class="fas fa-play-circle"></i> الإخلاص
+                </button>
+            </div>
+        </div>
+        
+    </div>
+</section>
 
             <!-- Khatam Quran Section (NEW) -->
             <section id="khatam" class="section">
